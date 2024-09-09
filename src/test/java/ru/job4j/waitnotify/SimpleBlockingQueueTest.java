@@ -2,6 +2,8 @@ package ru.job4j.waitnotify;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import static org.assertj.core.api.Assertions.*;
 
 class SimpleBlockingQueueTest {
@@ -66,5 +68,31 @@ class SimpleBlockingQueueTest {
         producer.join();
         consumer.join();
         assertThat(queue.poll()).isEqualTo(2);
+    }
+
+    @Test
+    public void whenFetchAllThenGetIt() throws InterruptedException {
+        final CopyOnWriteArrayList<Integer> buffer = new CopyOnWriteArrayList<>();
+        final SimpleBlockingQueue<Integer> queue = new SimpleBlockingQueue<>(3);
+        Thread producer = producer(queue, 7);
+        Thread consumer = new Thread(
+                () -> {
+                    while (!queue.isEmpty() || !Thread.currentThread().isInterrupted()) {
+                        try {
+                            buffer.add(queue.poll());
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+        );
+        consumer.start();
+        producer.start();
+        producer.join();
+        consumer.interrupt();
+        consumer.join();
+        assertThat(buffer).containsExactly(0, 1, 2, 3, 4, 5, 6)
+                .hasSize(7)
+                .doesNotContainNull();
     }
 }
