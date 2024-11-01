@@ -37,4 +37,12 @@ class ParallelIndexSearchTest {
         int result = ParallelIndexSearch.search(5555, array);
         assertThat(result).isEqualTo(-1);
     }
+
+    @Test
+    void whenTheTargetIsTheLastElement() {
+        Integer[] array = new Integer[555778];
+        IntStream.range(0, array.length).forEach(i -> array[i] = i);
+        int result = ParallelIndexSearch.search(array.length - 1, array);
+        assertThat(result).isEqualTo(555777);
+    }
 }
